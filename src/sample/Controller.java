@@ -57,7 +57,6 @@ public class Controller{
                     @Override
                     public Void call(){
                         while(true) {
-
                             //ram
                             usedBytes = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
                             usedBytes = usedBytes / 1048576;
