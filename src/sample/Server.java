@@ -55,6 +55,7 @@ public class Server extends Task implements TCPConnectionListener{
 
     @Override
     public synchronized void onRecieveReady(TCPConnection tcpConnection, String str) {
+
         sendToAll(str);
     }
 
@@ -70,6 +71,18 @@ public class Server extends Task implements TCPConnectionListener{
     }
 
     private void sendToAll(String str) {
+
+
+        int N = getNclient();
+        System.out.println("n= "+N);
+        if(N==1){
+            connections.get(0).sendString("service:you first");
+        }
+
+        if(N==2){
+            connections.get(0).sendString("service:you first");
+            connections.get(1).sendString("service:you second");
+        }
 
         System.out.println(str);
         for (TCPConnection connection : connections)

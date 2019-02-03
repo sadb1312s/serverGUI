@@ -79,11 +79,7 @@ public class Controller{
     }
 
 
-    public void printMessage(String str){
-        Platform.runLater(() -> {
-            Log.appendText(str);
-        });
-    }
+
 
     public void getPort(ActionEvent actionEvent) {
         if(!Port.getText().equals("")) {
