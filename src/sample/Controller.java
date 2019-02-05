@@ -47,6 +47,7 @@ public class Controller{
 
                 Server server = new Server(port);
                 new Thread(server).start();
+
                 ServerStart = true;
                 Status.setText("Is running");
                 Status.setStyle("-fx-background-color: GREEN;");
