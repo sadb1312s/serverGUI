@@ -46,14 +46,17 @@ public class Controller{
                 Status.setStyle("-fx-background-color: BLUE;");
 
                 Server server = new Server(port);
-                new Thread(server).start();
+
+                Thread th = new Thread(server);
+                th.setDaemon(true);
+                th.start();
 
                 ServerStart = true;
                 Status.setText("Is running");
                 Status.setStyle("-fx-background-color: GREEN;");
 
 
-                Task task = new Task<Void>(){
+                /*Task task = new Task<Void>(){
                     long usedBytes;
                     @Override
                     public Void call(){
@@ -73,8 +76,12 @@ public class Controller{
 
                         }
                     }
-                };
-                new Thread(task).start();
+                };*/
+
+
+               /* Thread t=new Thread(task);
+                t.setDaemon(true);
+                t.start();*/
             }
         });
     }

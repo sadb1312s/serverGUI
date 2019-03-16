@@ -9,6 +9,7 @@ import java.util.ArrayList;
 public class Server extends Task implements TCPConnectionListener{
     private ArrayList<TCPConnection> connections = new ArrayList<>();
     int port;
+    boolean start=true;
 
     public Server(int port){
         this.port=port;
@@ -56,7 +57,7 @@ public class Server extends Task implements TCPConnectionListener{
 
     @Override
     public synchronized void onRecieveReady(TCPConnection tcpConnection, String str) {
-        System.out.println(str);
+        //System.out.println(str);
         sendToAll(str);
     }
 
@@ -73,9 +74,9 @@ public class Server extends Task implements TCPConnectionListener{
 
     private void sendToAll(String str) {
 
+        //System.out.println(str);
 
-        System.out.println(str);
-        //if(!str.equals("null")) {
+            //if(!str.equals("null")) {
             int N = getNclient();
             System.out.println("n= " + N);
             if (N == 1) {
@@ -85,6 +86,7 @@ public class Server extends Task implements TCPConnectionListener{
             if (N == 2) {
                 connections.get(0).sendString("service:you first");
                 connections.get(1).sendString("service:you second");
+                start=false;
             }
             if (N > 2) {
                 int k = 1;
@@ -94,9 +96,13 @@ public class Server extends Task implements TCPConnectionListener{
                 }
             }
 
-            System.out.println(str);
+
+
+
+            //System.out.println(str);
             for (TCPConnection connection : connections)
                 connection.sendString(str);
+
         //}
     }
 }
