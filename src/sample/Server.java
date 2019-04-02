@@ -1,56 +1,104 @@
 package sample;
 
-import javafx.concurrent.Task;
 
+
+import javax.net.ServerSocketFactory;
+import javax.net.ssl.SSLServerSocketFactory;
+import javax.net.ssl.SSLSession;
+import javax.net.SocketFactory;
+import javax.net.ssl.SSLSocketFactory;
 import java.io.IOException;
+import java.net.BindException;
 import java.net.ServerSocket;
+import java.net.Socket;
 import java.util.ArrayList;
 
-public class Server extends Task implements TCPConnectionListener{
-    private ArrayList<TCPConnection> connections = new ArrayList<>();
-    int port;
+public class Server extends Thread implements TCPConnectionListener{
+    public ArrayList<TCPConnection> connections = new ArrayList<>();
+    static int port=0;
     boolean start=true;
-
-    public Server(int port){
-        this.port=port;
-
-    }
-
-    public Void call(){
+    static int userCount=2;
+    boolean userCountAccept=false;
+    boolean stop;
+    boolean error;
+    int user;
 
 
-        System.out.println("Server running...");
-        System.out.println(port);
+    ServerSocket serverSocket;
+
+    @Override
+    public void run() throws RuntimeException {
 
 
-        try(ServerSocket serverSocket = new ServerSocket(port)){
-            while (true){
+            System.out.println("Server running...");
+            System.out.println(port);
+            System.out.println(userCount);
 
-                try {
-                    new TCPConnection(this, serverSocket.accept());
-                }catch (IOException e){
-                    System.out.println("TCPConnection exception: "+e);
+
+
+            try {
+
+
+                serverSocket = new ServerSocket(port);
+
+
+                //while (!userCountAccept) {
+                while (!userCountAccept) {
+                    try {
+
+                        if(!userCountAccept) {
+                            user++;
+                            System.out.println("new "+user);
+                            new TCPConnection(this, serverSocket.accept());
+                            if (user == userCount) {
+                                System.out.println("ало закрываемся");
+                                userCountAccept = true;
+
+                                //serverSocket.close();
+                            }
+                       }
+                    } catch (IOException e) {
+                        System.out.println("TCPConnection exception: " + e);
+                    }
+
+                    while (userCountAccept) {
+                        Thread.sleep(200);
+                        System.out.println(connections.size());
+                        if(connections.size()<user)
+                            userCountAccept=false;
+
+                    }
                 }
+
+            } catch (BindException e){
+                System.out.println("it seems the port "+Server.port+" is busy");
+                System.out.println("Restart server with other port");
+                error=true;
+
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+
+            } catch (IllegalArgumentException e){
+                error=true;
+                System.out.println("Non-numeric port number");
+                System.out.println("Restart server with other port");
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
-        }
-        catch (IOException e){
-            throw new RuntimeException(e);
-        }
+
+
     }
 
 
     public int getNclient(){
-        int N=0;
-        for(TCPConnection o: connections){
-            N++;
-        }
-        return N;
+        return connections.size();
     }
 
     @Override
     public synchronized void onConnectionReady(TCPConnection tcpConnection) {
         connections.add(tcpConnection);
-        System.out.println("client connected "+tcpConnection);
+        //System.out.println("client connected "+tcpConnection+" "+connections.size());
+
         sendToAll("client connected "+tcpConnection);
 
     }
@@ -63,7 +111,11 @@ public class Server extends Task implements TCPConnectionListener{
 
     @Override
     public synchronized void onDisconect(TCPConnection tcpConnection) {
-        connections.remove(tcpConnection);
+
+        if(!stop) {
+            System.out.println("dsads");
+            connections.remove(tcpConnection);
+        }
         sendToAll("client disconnected "+tcpConnection);
     }
 
@@ -76,9 +128,10 @@ public class Server extends Task implements TCPConnectionListener{
 
         //System.out.println(str);
 
-            //if(!str.equals("null")) {
+            if(!str.equals("null")) {
             int N = getNclient();
-            System.out.println("n= " + N);
+        
+
             if (N == 1) {
                 connections.get(0).sendString("service:you first");
             }
@@ -91,6 +144,7 @@ public class Server extends Task implements TCPConnectionListener{
             if (N > 2) {
                 int k = 1;
                 for (TCPConnection o : connections) {
+
                     o.sendString("serviceMU:" + k + ">" + N);
                     k++;
                 }
@@ -103,6 +157,11 @@ public class Server extends Task implements TCPConnectionListener{
             for (TCPConnection connection : connections)
                 connection.sendString(str);
 
-        //}
+        }
+    }
+
+    @Override
+    protected void finalize() {
+        System.out.println("kill");
     }
 }

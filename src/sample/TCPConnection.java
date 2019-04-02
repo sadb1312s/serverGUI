@@ -1,12 +1,15 @@
 package sample;
 
+import javax.net.ssl.SSLSession;
+import javax.net.ssl.SSLSocket;
 import java.io.*;
 import java.net.Socket;
 import java.nio.charset.Charset;
+import java.security.cert.Certificate;
 
 public class TCPConnection {
 
-    private final Socket socket;
+    public final Socket socket;
     private final Thread rxThread;//поток который слушает поток ввода
     private final BufferedReader in;
     private final BufferedWriter out;
@@ -21,9 +24,12 @@ public class TCPConnection {
         this.socket=socket;
         this.eventListener=eventListener;
 
+
+
         //входящие и исходящие
         in = new BufferedReader(new InputStreamReader(socket.getInputStream(), Charset.forName("UTF-8")));
         out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream(),Charset.forName("UTF-8")));
+
         //слущающий поток
         //анонимный класс
         rxThread = new Thread(new Runnable() {
@@ -59,10 +65,12 @@ public class TCPConnection {
         //остонавливаем поток
         rxThread.interrupt();
         //закрываем сокет
-        try {
-            socket.close();
-        } catch (IOException e) {
-            eventListener.onException(TCPConnection.this,e);
+        if(!socket.isClosed()) {
+            try {
+                socket.close();
+            } catch (IOException e) {
+                eventListener.onException(TCPConnection.this, e);
+            }
         }
     }
     @Override
